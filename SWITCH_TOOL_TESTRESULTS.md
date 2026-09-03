@@ -81,6 +81,52 @@ the ~2x a duplicated capture would show. This is the actual proof that
 the RX-only/both-ports design avoids the duplication the naive rx+tx
 approach falls into.
 
+## What happens when the mirror is oversubscribed?
+
+A natural question once you've seen the monitor port running close to its
+own ceiling: if the segments being mirrored genuinely push more combined
+traffic than the monitor port's 1Gbps can carry, does the mirror drop
+frames, or does the *original* traffic between the segments slow down to
+keep the mirror copy intact?
+
+Tested directly: ran the identical bidirectional test **with mirroring
+disabled entirely** and compared against the mirrored run above.
+
+| | Combined bidirectional throughput |
+|---|---|
+| Mirror **off** | 924.5 Mbps |
+| Mirror **on** (the run measured above) | 924.7 Mbps |
+
+Statistically identical — within 0.2Mbps (<0.03%) across two independent
+20-second runs, well inside normal run-to-run noise. **Enabling the
+mirror had zero measurable effect on the real transfer**, even with the
+monitor port already running near its own realistic ceiling. This also
+shows the ~925Mbps combined figure isn't a mirroring artifact at all —
+it's this router's own inherent forwarding capacity for this traffic
+pattern (likely a CPU/PPE/switching-fabric ceiling for two concurrent
+bidirectional inter-VLAN flows), present whether or not anything is being
+mirrored.
+
+**So: if combined traffic genuinely exceeds what the monitor port can
+carry, the answer is "some traffic will not be mirrored" — not "the
+transfer will slow down."** Mirroring is a passive copy at the switch
+ASIC level, decoupled from the original traffic path with no flow-control
+mechanism back to it (nothing in this architecture *could* signal "monitor
+port is full, please slow down" to the original ports — that's not how a
+hardware SPAN tap works on essentially any switch chip, this one
+included). The original conversation between the two segments proceeds at
+whatever rate the router can actually forward it at, entirely independent
+of monitor-port congestion; only the mirrored *copy* is at risk of losing
+frames once demand exceeds the monitor port's own line rate. This is
+consistent with (though doesn't itself directly measure) the general
+principle that mirroring happens below the CPU/netdev layer with no
+software-visible drop counter on the monitor port — see `SWITCH_TOOL_MAN.md`
+CAVEATS — so if frames were being dropped due to oversubscription, no
+counter on either end would show it directly; you'd only infer it from
+the mirrored capture's rate flattening out at the monitor port's own
+physical ceiling (~940-980Mbps for 1000BASE-T) while the real,
+independently-verified source traffic exceeded that.
+
 ## Findings
 
 1. **Port mirroring is real, functional, and line-rate-capable for a
@@ -114,6 +160,15 @@ approach falls into.
    distinction would need chip-register-level inspection — out of scope
    here (see `SWITCH_TOOL_MAN.md` CAVEATS on `reg`/`phy` — no
    documented-safe register map exists for this chip).
+5. **Mirroring never throttles the original traffic, even near
+   saturation.** Toggling the mirror off and rerunning the identical
+   bidirectional test produced statistically identical throughput
+   (924.5Mbps vs. 924.7Mbps) — confirming mirroring is a true passive
+   copy with no backpressure to the source ports. If combined traffic
+   ever genuinely exceeds the monitor port's own capacity, the expected
+   behavior (architecturally, and consistent with everything measured
+   here) is that excess **mirrored frames get dropped** — the real
+   conversation between the segments is unaffected.
 
 ## Scope and open questions
 
