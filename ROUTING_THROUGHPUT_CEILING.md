@@ -1,6 +1,6 @@
 # ER-X 2Gbps bidirectional routing throughput investigation
 
-25-test investigation into why bidirectional throughput between two
+26-test investigation into why bidirectional throughput between two
 *routed* network segments on an EdgeRouter X (ER-X 5-Port, EdgeOS
 `v2.0.9-hotfix.7`, MediaTek MT7530 switch ASIC) plateaus well under the
 2Gbps theoretical ceiling of two full-duplex 1000BASE-T links — and what,
@@ -63,6 +63,7 @@ to find out why and whether it could be pushed higher.
 | **23** | **Control test: hardware NAT/offload (`hwnat`) disabled** | **428.5 Mbps combined** (less than half normal), CPU spiking to 94.5% softirq | confirms the ~930Mbps ceiling *is* the hardware offload engine's own capacity |
 | 24 | `hwnat` re-enabled, confirmation | 934.0 Mbps | fully restored |
 | **25** | Independent (non-switch-fabric) port ↔ switch-fabric port, both directions | 936-938 Mbps / 927.2 Mbps | same ceiling — no advantage from an independent port; see below |
+| 26 | Final confirmation on the fully-restored baseline config, port mirroring active | 931.2 Mbps combined | squarely inside the established range, mirroring costs nothing |
 
 ## Findings
 
@@ -155,7 +156,7 @@ this — it recreates the same shared-link cap.
 **2Gbps bidirectional is not achievable between two *routed* segments on
 this router** — the L3 forwarding path has a hard, CPU-independent
 ceiling around 925-950Mbps combined, and nothing at the OS, driver,
-protocol, or router-config layer changes that (25 tests covering the
+protocol, or router-config layer changes that (26 tests covering the
 practical space of software/config levers, including live confirmation
 that an independent port offers no advantage over a switch-fabric one).
 **2Gbps bidirectional *is* achievable on the same hardware for traffic
