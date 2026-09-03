@@ -33,11 +33,11 @@ explicitly wherever the evidence is indirect.
   ACLs, IGMP snooping, low-level PHY/register access), with notes on
   which ones have actually been exercised live versus documented from
   `--help` text alone.
+- **[`SWITCH_TOOL.md`](SWITCH_TOOL.md)** — the narrative investigation:
+  full command transcripts, the live reboot-persistence test, and
+  functional proof of port mirroring across multiple VLANs.
 
-More narrative write-ups — full command transcripts, the live
-reboot-persistence test, and functional proof of port mirroring across
-multiple VLANs — may follow as more of this tool gets exercised and
-verified.
+More may follow as more of this tool gets exercised and verified.
 
 ## Scope and disclaimer
 
@@ -50,3 +50,13 @@ revision they were tested against (an EdgeRouter X 5-Port running EdgeOS
 **no** relationship to EdgeOS's config-rollback safety net — read
 `SWITCH_TOOL_MAN.md`'s CAVEATS section before running anything from here
 against your own device.
+
+## Credit
+
+Inspired by gojimmypi's
+["EdgeRouter-X Port Mirroring: Inspect ESP32 Network
+Packets"](https://gojimmypi.github.io/Edgerouter-Port-Monitor/) (2022),
+the earliest writeup found of the `mirror monitor`/`mirror target`
+port-mirroring feature this repo also documents. Independently verified
+here rather than copied from it, but it's the reason this looked worth
+digging into further in the first place.
