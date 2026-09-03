@@ -8,12 +8,21 @@ if anything, can be done about it.
 
 ## Goal
 
-Push real bidirectional throughput between two routed network segments
-(**Host A** ↔ **Host B**, routed through the ER-X) as close as possible to
-**2Gbps combined** (1Gbps in each direction, simultaneously). Baseline
-testing had shown combined bidirectional throughput plateauing around
-**925-950Mbps**, well under half the theoretical ceiling, and the goal was
-to find out why and whether it could be pushed higher.
+Two goals, pursued together:
+
+1. **Throughput**: push real bidirectional throughput between two routed
+   network segments (**Host A** ↔ **Host B**, routed through the ER-X) as
+   close as possible to **2Gbps combined** (1Gbps in each direction,
+   simultaneously). Baseline testing had shown combined bidirectional
+   throughput plateauing around **925-950Mbps**, well under half the
+   theoretical ceiling, and the goal was to find out why and whether it
+   could be pushed higher.
+2. **Mirroring at line speed, at no cost**: prove that the same traffic
+   could be captured via the switch ASIC's hardware port-mirroring (see
+   [`SWITCH_TOOL_TESTRESULTS.md`](SWITCH_TOOL_TESTRESULTS.md)) at full
+   line rate, with **no measurable throughput penalty and no packet
+   loss** to the real traffic being mirrored — turning on visibility into
+   the network shouldn't cost the network anything.
 
 ## Method
 
@@ -168,6 +177,22 @@ routing-path ceiling) are the two realistic options on this specific
 ER-X; there is no config change available that lets routed traffic
 between two subnets exceed roughly one port's worth of aggregate
 throughput on this hardware.
+
+**Goal 2 — mirroring at line speed, no cost — is achieved and proven.**
+Demonstrated two independent ways: (1) the standalone mirroring
+investigation in [`SWITCH_TOOL_TESTRESULTS.md`](SWITCH_TOOL_TESTRESULTS.md)
+pushed a single mirrored port/direction to ≈974Mbps wire rate with
+**zero measured packet loss**, cross-checked via hardware RX counters and
+raw capture analysis, not just `iperf3`'s self-report; (2) *this*
+investigation confirmed mirroring has **no effect on the real traffic
+being mirrored**, twice — Test 15 (mirror on vs. off, statistically
+identical combined throughput) and Test 26 (the final confirmation run,
+mirror active on the fully-restored production config, landing at
+931.2Mbps — squarely inside the same 925-950Mbps range every unmirrored
+run also landed in). Port mirroring on this hardware is implemented in
+the switch ASIC itself, not the CPU forwarding path, which is exactly why
+it's free: it doesn't compete with the same fixed-capacity resource (the
+hardware offload engine) that caps routed throughput in the first place.
 
 ## Operational notes (for anyone repeating this kind of test)
 
