@@ -242,7 +242,18 @@ has no equivalent for this at all:
   are named as targets, not because the tool understands VLANs specially.
 
 Both commands are **silent on success** — no confirmation text, unlike
-`pvid`.
+`pvid`. If a plain invocation fails with a permission error, try prefixing
+`sudo` — external reports of this same feature run it that way; this
+testing didn't hit that case, likely a difference in how the session was
+authenticated rather than a difference in the command itself.
+
+Port numbering (index = physical port, `0` leftmost facing the device,
+matching `ethN` directly) and the exact `mirror monitor`/`mirror target`
+syntax and mode values here match an independent, earlier writeup of this
+same feature — gojimmypi's ["EdgeRouter-X Port Mirroring: Inspect ESP32
+Network Packets"](https://gojimmypi.github.io/Edgerouter-Port-Monitor/)
+(2022) — a useful independent cross-check that this behavior is
+consistent across devices/firmware, not an artifact of one box.
 
 **Live-verified functionally.** Setup: port 3 as the monitor/destination,
 ports 1 and 2 (each carrying a different VLAN) as mirror sources:
