@@ -40,6 +40,12 @@ explicitly wherever the evidence is indirect.
   sustained-throughput proof for port mirroring: a single mirrored
   port/direction pushed to ≈974Mbps wire rate with zero measured packet
   loss, cross-checked two independent ways.
+- **[`ROUTING_THROUGHPUT_CEILING.md`](ROUTING_THROUGHPUT_CEILING.md)** —
+  a 25-test investigation into why bidirectional *routed* throughput
+  between two segments plateaus around 925-950Mbps instead of the
+  theoretical 2Gbps, root-caused to the router's hardware NAT/offload
+  engine's own fixed capacity — with a clean L2-vs-L3 A/B proving the
+  same physical ports can reach ~1875Mbps when routing isn't involved.
 
 More may follow as more of this tool gets exercised and verified.
 
