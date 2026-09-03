@@ -103,9 +103,45 @@ mirror had zero measurable effect on the real transfer**, even with the
 monitor port already running near its own realistic ceiling. This also
 shows the ~925Mbps combined figure isn't a mirroring artifact at all —
 it's this router's own inherent forwarding capacity for this traffic
-pattern (likely a CPU/PPE/switching-fabric ceiling for two concurrent
-bidirectional inter-VLAN flows), present whether or not anything is being
-mirrored.
+pattern, present whether or not anything is being mirrored (characterized
+further below).
+
+### Why doesn't bidirectional throughput just add up to ~2Gbps?
+
+Full-duplex 1000BASE-T has physically separate wire pairs for each
+direction — there's no *physical* reason two simultaneous ~930Mbps flows
+in opposite directions across the same links couldn't coexist at close to
+full rate each, for a combined ~1.8Gbps. The ~925Mbps combined figure
+above is well short of that, which is worth actually explaining rather
+than hand-waving as "some kind of forwarding limit."
+
+Tested directly — each direction run **alone** (not simultaneously):
+
+| Test | Throughput |
+|---|---|
+| `Host A → Host B` alone | 932.1 Mbps |
+| `Host B → Host A` alone | 931.4 Mbps |
+| Both simultaneously (bidir) | 461.9 + 462.8 = **924.7 Mbps combined** |
+
+Each direction independently reaches line rate on its own — confirming
+the full-duplex physical links themselves are not the constraint, exactly
+as expected. But run at the same time, the two flows don't add up; they
+split roughly evenly to a combined figure barely above what *either one
+alone* achieves. The router's CPU stayed **97-99% idle** in every case
+here too — unidirectional or simultaneous, no difference — ruling out
+CPU contention as the explanation.
+
+That points to a **shared aggregate forwarding-path ceiling** somewhere
+in the router's datapath for this traffic pattern — most plausibly its
+hardware NAT/flow-offload engine (`hnat`) or a shared internal bus
+between the switch fabric and that engine, sized around ~925-950Mbps
+**total** regardless of how many concurrent flows or directions are
+using it, rather than a per-direction/per-port allowance the way
+full-duplex Ethernet's physical layer would otherwise permit. Not
+root-caused at the register/silicon level (out of scope, consistent with
+this project's other CAVEATS) — but empirically clear: whatever this
+ceiling is, it's shared across flows, not CPU-bound, and not a property
+of the physical link.
 
 **So: if combined traffic genuinely exceeds what the monitor port can
 carry, the answer is "some traffic will not be mirrored" — not "the
