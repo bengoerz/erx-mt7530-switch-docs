@@ -129,7 +129,17 @@ capture on the monitor port) or `phy`/`reg` register inspection against
 a chip datasheet, which this document does not provide (see BUGS).
 
 Both `mirror` subcommands are silent on success — no confirmation text,
-matching most of this tool's write commands.
+matching most of this tool's write commands. If a plain invocation fails
+with a permission error, try prefixing `sudo` — some environments need it,
+depending on how the session authenticated.
+
+This feature's syntax and port-numbering scheme (index `0` = leftmost
+port facing the device, matching `ethN` directly) independently matches
+an earlier writeup covering the same feature: gojimmypi's
+["EdgeRouter-X Port Mirroring: Inspect ESP32 Network
+Packets"](https://gojimmypi.github.io/Edgerouter-Port-Monitor/) (2022) —
+useful cross-device confirmation that this behavior isn't specific to one
+box or firmware build.
 
 ## Rate limiting
 
