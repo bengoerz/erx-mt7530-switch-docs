@@ -36,18 +36,21 @@ explicitly wherever the evidence is indirect.
 - **[`SWITCH_TOOL.md`](SWITCH_TOOL.md)** — the narrative investigation:
   full command transcripts, the live reboot-persistence test, and
   functional proof of port mirroring across multiple VLANs.
-- **[`SWITCH_TOOL_TESTRESULTS.md`](SWITCH_TOOL_TESTRESULTS.md)** —
-  sustained-throughput proof for port mirroring: a single mirrored
-  port/direction pushed to ≈974Mbps wire rate with zero measured packet
-  loss, cross-checked two independent ways.
-- **[`ROUTING_THROUGHPUT_CEILING.md`](ROUTING_THROUGHPUT_CEILING.md)** —
-  proof that port mirroring runs at full line rate with zero measurable
-  cost to the real traffic being mirrored, which first required a
-  26-test side-investigation into why bidirectional *routed* throughput
-  between two segments plateaus around 925-950Mbps instead of the
-  theoretical 2Gbps — root-caused to the router's hardware NAT/offload
-  engine's own fixed capacity, with a clean L2-vs-L3 A/B proving the same
-  physical ports can reach ~1875Mbps when routing isn't involved.
+- **[`SWITCH_MIRROR_FUNCTIONAL_TESTING.md`](SWITCH_MIRROR_FUNCTIONAL_TESTING.md)**
+  — functional correctness proof for port mirroring: getting a genuinely
+  bidirectional capture (both directions of a conversation, at
+  near-gigabit load) with **zero duplicate frames** — including the
+  non-obvious trap (mirroring both RX+TX double-counts routed packets)
+  and the fix, cross-checked two independent ways.
+- **[`SWITCH_MIRROR_PERFORMANCE_TESTING.md`](SWITCH_MIRROR_PERFORMANCE_TESTING.md)**
+  — proof that port mirroring runs at full line rate with **zero
+  measurable cost** to the real traffic being mirrored, which first
+  required a 26-test side-investigation into why bidirectional *routed*
+  throughput between two segments plateaus around 925-950Mbps instead of
+  the theoretical 2Gbps — root-caused to the router's hardware
+  NAT/offload engine's own fixed capacity, with a clean L2-vs-L3 A/B
+  proving the same physical ports can reach ~1875Mbps when routing isn't
+  involved.
 
 More may follow as more of this tool gets exercised and verified.
 

@@ -23,7 +23,7 @@ themselves.
 
 **Primary goal**: prove that traffic can be captured via the switch
 ASIC's hardware port-mirroring (see
-[`SWITCH_TOOL_TESTRESULTS.md`](SWITCH_TOOL_TESTRESULTS.md)) at full line
+[`SWITCH_MIRROR_FUNCTIONAL_TESTING.md`](SWITCH_MIRROR_FUNCTIONAL_TESTING.md)) at full line
 rate, with **no measurable throughput penalty and no packet loss** to the
 real traffic being mirrored — i.e. that turning on visibility into the
 network doesn't cost the network anything.
@@ -133,7 +133,7 @@ finding out why, and whether it could be pushed higher.
 6. **Mirroring never affects the underlying traffic** — confirmed
    directly (Test 15: mirror on vs. off, statistically identical) and
    consistent with the separate port-mirroring throughput proof in
-   [`SWITCH_TOOL_TESTRESULTS.md`](SWITCH_TOOL_TESTRESULTS.md).
+   [`SWITCH_MIRROR_FUNCTIONAL_TESTING.md`](SWITCH_MIRROR_FUNCTIONAL_TESTING.md).
 7. **The separate-PCIe-bus test (18) was inconclusive, not negative** —
    it surfaced an apparently unrelated NIC-specific problem rather than
    cleanly isolating whether two hosts sharing one physical NIC's PCIe
@@ -181,7 +181,7 @@ this — it recreates the same shared-link cap.
 **Primary goal achieved: port mirroring on this hardware runs at line
 speed with zero measurable cost to the real traffic being mirrored.**
 Demonstrated two independent ways: (1) the standalone mirroring
-investigation in [`SWITCH_TOOL_TESTRESULTS.md`](SWITCH_TOOL_TESTRESULTS.md)
+investigation in [`SWITCH_MIRROR_FUNCTIONAL_TESTING.md`](SWITCH_MIRROR_FUNCTIONAL_TESTING.md)
 pushed a single mirrored port/direction to ≈974Mbps wire rate with
 **zero measured packet loss**, cross-checked via hardware RX counters and
 raw capture analysis, not just `iperf3`'s self-report; (2) *this*
