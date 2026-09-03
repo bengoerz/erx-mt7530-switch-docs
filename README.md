@@ -1,4 +1,4 @@
-# erx-mt7621-switch-docs
+# erx-mt7530-switch-docs
 
 Unofficial documentation for `/sbin/switch` — an undocumented, unsupported
 binary shipped on Ubiquiti EdgeRouter X (ER-X) class hardware (MT7621-based
