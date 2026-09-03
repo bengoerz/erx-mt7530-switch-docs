@@ -36,6 +36,10 @@ explicitly wherever the evidence is indirect.
 - **[`SWITCH_TOOL.md`](SWITCH_TOOL.md)** — the narrative investigation:
   full command transcripts, the live reboot-persistence test, and
   functional proof of port mirroring across multiple VLANs.
+- **[`SWITCH_TOOL_TESTRESULTS.md`](SWITCH_TOOL_TESTRESULTS.md)** —
+  sustained-throughput proof for port mirroring: a single mirrored
+  port/direction pushed to ≈974Mbps wire rate with zero measured packet
+  loss, cross-checked two independent ways.
 
 More may follow as more of this tool gets exercised and verified.
 
