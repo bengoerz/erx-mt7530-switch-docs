@@ -1,28 +1,32 @@
-# ER-X 2Gbps bidirectional routing throughput investigation
+# ER-X port mirroring at line speed, at zero performance cost
 
-26-test investigation into why bidirectional throughput between two
-*routed* network segments on an EdgeRouter X (ER-X 5-Port, EdgeOS
-`v2.0.9-hotfix.7`, MediaTek MT7530 switch ASIC) plateaus well under the
-2Gbps theoretical ceiling of two full-duplex 1000BASE-T links — and what,
-if anything, can be done about it.
+26-test investigation proving that hardware port-mirroring on an
+EdgeRouter X (ER-X 5-Port, EdgeOS `v2.0.9-hotfix.7`, MediaTek MT7530
+switch ASIC) runs at full line rate with no measurable cost to the real
+traffic being mirrored — which required first pinning down what this
+router's actual maximum *routed* throughput is, since it turned out not
+to be the naive 2Gbps two full-duplex 1000BASE-T links would suggest.
 
 ## Goal
 
-Two goals, pursued together:
+**Primary goal**: prove that traffic can be captured via the switch
+ASIC's hardware port-mirroring (see
+[`SWITCH_TOOL_TESTRESULTS.md`](SWITCH_TOOL_TESTRESULTS.md)) at full line
+rate, with **no measurable throughput penalty and no packet loss** to the
+real traffic being mirrored — i.e. that turning on visibility into the
+network doesn't cost the network anything.
 
-1. **Throughput**: push real bidirectional throughput between two routed
-   network segments (**Host A** ↔ **Host B**, routed through the ER-X) as
-   close as possible to **2Gbps combined** (1Gbps in each direction,
-   simultaneously). Baseline testing had shown combined bidirectional
-   throughput plateauing around **925-950Mbps**, well under half the
-   theoretical ceiling, and the goal was to find out why and whether it
-   could be pushed higher.
-2. **Mirroring at line speed, at no cost**: prove that the same traffic
-   could be captured via the switch ASIC's hardware port-mirroring (see
-   [`SWITCH_TOOL_TESTRESULTS.md`](SWITCH_TOOL_TESTRESULTS.md)) at full
-   line rate, with **no measurable throughput penalty and no packet
-   loss** to the real traffic being mirrored — turning on visibility into
-   the network shouldn't cost the network anything.
+Answering that convincingly requires knowing what "full line rate"
+actually *is* for this router first. That became a necessary side-quest:
+**push real bidirectional throughput between two routed network
+segments** (**Host A** ↔ **Host B**, routed through the ER-X) as close as
+possible to **2Gbps combined**, to establish the actual achievable
+baseline — only once that ceiling (and its cause) was pinned down could
+the mirroring question be answered against the real number rather than a
+theoretical one. Baseline testing had shown combined bidirectional
+throughput plateauing around **925-950Mbps**, well under half the
+theoretical ceiling, so most of the test log below is this side-quest:
+finding out why, and whether it could be pushed higher.
 
 ## Method
 
@@ -162,23 +166,8 @@ this — it recreates the same shared-link cap.
 
 ## Bottom line
 
-**2Gbps bidirectional is not achievable between two *routed* segments on
-this router** — the L3 forwarding path has a hard, CPU-independent
-ceiling around 925-950Mbps combined, and nothing at the OS, driver,
-protocol, or router-config layer changes that (26 tests covering the
-practical space of software/config levers, including live confirmation
-that an independent port offers no advantage over a switch-fabric one).
-**2Gbps bidirectional *is* achievable on the same hardware for traffic
-that doesn't need routing** — pure L2 switching between the same two
-ports reached the full physical ceiling cleanly and reproducibly. If a
-real workload needs to move that much traffic between two segments,
-keeping them on the same L2 domain (or accepting the router's
-routing-path ceiling) are the two realistic options on this specific
-ER-X; there is no config change available that lets routed traffic
-between two subnets exceed roughly one port's worth of aggregate
-throughput on this hardware.
-
-**Goal 2 — mirroring at line speed, no cost — is achieved and proven.**
+**Primary goal achieved: port mirroring on this hardware runs at line
+speed with zero measurable cost to the real traffic being mirrored.**
 Demonstrated two independent ways: (1) the standalone mirroring
 investigation in [`SWITCH_TOOL_TESTRESULTS.md`](SWITCH_TOOL_TESTRESULTS.md)
 pushed a single mirrored port/direction to ≈974Mbps wire rate with
@@ -192,7 +181,27 @@ mirror active on the fully-restored production config, landing at
 run also landed in). Port mirroring on this hardware is implemented in
 the switch ASIC itself, not the CPU forwarding path, which is exactly why
 it's free: it doesn't compete with the same fixed-capacity resource (the
-hardware offload engine) that caps routed throughput in the first place.
+hardware offload engine) that caps routed throughput — which is what all
+the rest of this investigation went and found.
+
+**Side-quest result: 2Gbps bidirectional is not achievable between two
+*routed* segments on this router** — the L3 forwarding path has a hard,
+CPU-independent ceiling around 925-950Mbps combined, and nothing at the
+OS, driver, protocol, or router-config layer changes that (26 tests
+covering the practical space of software/config levers, including live
+confirmation that an independent port offers no advantage over a
+switch-fabric one). **2Gbps bidirectional *is* achievable on the same
+hardware for traffic that doesn't need routing** — pure L2 switching
+between the same two ports reached the full physical ceiling cleanly and
+reproducibly. This is what made the primary goal's numbers meaningful in
+the first place: "line speed" for this router's *routed* traffic is
+~930-950Mbps, not 2Gbps, and that's the bar the mirroring proof above
+actually had to clear. If a real workload needs to move more than that
+between two routed segments, keeping them on the same L2 domain (or
+accepting the router's routing-path ceiling) are the two realistic
+options on this specific ER-X; there is no config change available that
+lets routed traffic between two subnets exceed roughly one port's worth
+of aggregate throughput on this hardware.
 
 ## Operational notes (for anyone repeating this kind of test)
 
