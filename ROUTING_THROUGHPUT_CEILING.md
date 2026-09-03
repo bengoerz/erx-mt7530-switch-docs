@@ -1,11 +1,23 @@
 # ER-X port mirroring at line speed, at zero performance cost
 
-26-test investigation proving that hardware port-mirroring on an
-EdgeRouter X (ER-X 5-Port, EdgeOS `v2.0.9-hotfix.7`, MediaTek MT7530
-switch ASIC) runs at full line rate with no measurable cost to the real
-traffic being mirrored — which required first pinning down what this
-router's actual maximum *routed* throughput is, since it turned out not
-to be the naive 2Gbps two full-duplex 1000BASE-T links would suggest.
+**Executive summary**: hardware port mirroring on an EdgeRouter X (ER-X
+5-Port, EdgeOS `v2.0.9-hotfix.7`, MediaTek MT7530 switch ASIC) runs at
+full line rate with **zero measurable cost** to the traffic it
+mirrors — proven both in isolation (a single mirrored port/direction
+sustained ≈974Mbps wire rate with **zero packet loss**) and under real
+bidirectional cross-traffic (mirroring on vs. off was statistically
+identical, and a final confirmation run with mirroring active landed at
+931.2Mbps, squarely inside the normal range). Establishing what "line
+rate" even means for this router required a 26-test side-investigation:
+bidirectional throughput between two *routed* segments has a hard
+ceiling around **925-950Mbps combined**, not the naive 2Gbps two
+full-duplex 1000BASE-T links would suggest — caused by the fixed
+capacity of the router's hardware NAT/offload engine, confirmed by
+directly disabling it (throughput collapsed to 428Mbps, CPU spiked from
+~99% idle to ~95% softirq). The same physical ports reach **~1875Mbps**
+when traffic doesn't need routing (pure L2 bridging), confirming the
+ceiling is specific to the routing decision, not the links or hardware
+themselves.
 
 ## Goal
 
