@@ -127,6 +127,59 @@ the mirrored capture's rate flattening out at the monitor port's own
 physical ceiling (~940-980Mbps for 1000BASE-T) while the real,
 independently-verified source traffic exceeded that.
 
+### Will an IDS/NSM tool on the capture port notice if traffic is missing?
+
+A natural next question if you're planning to point something like Zeek
+or Suricata at the monitor port: will it tell you when the mirror is
+dropping traffic? **Not this project's live-tested claim** — this wasn't
+run against this rig — but worth being precise about, based on how these
+tools' loss-detection mechanisms actually work, since the honest answer
+is "partially, and it matters which layer of loss you mean."
+
+**What their own drop counters won't show**: switch-ASIC-level drops (the
+oversubscription scenario above) happen *before* a frame is ever
+transmitted onto the wire toward the capture host — from that host's
+point of view, a dropped frame simply never existed. This applies
+uniformly to *everything* running on that host, including Zeek's own
+`capture_loss.log` and Suricata's `stats.log` `capture.kernel_drops` —
+both specifically measure loss **between the NIC and the tool's own
+processing** (i.e. the tool couldn't keep up and its ring buffer
+overflowed), which is a real and useful thing to monitor, but a different
+failure mode than switch-level oversubscription. It's the same boundary
+`ethtool -S`'s `rx_missed_errors` sits at, measured directly above (0
+throughout this testing) — none of these counters can see past the point
+where the frame was still inside the switch.
+
+**What they likely *can* notice, indirectly**: for TCP connections a tool
+is otherwise tracking, both Zeek and Suricata perform sequence-number-based
+gap detection during stream reassembly. If a segment goes missing from an
+otherwise-visible TCP stream — for *any* reason, including a switch-level
+drop — the reassembler notices the discontinuity. Zeek surfaces this as
+`missed_bytes` in `conn.log`, and ships a script
+(`policy/misc/capture-loss.zeek`, commonly enabled) built specifically to
+turn this into an ongoing capture-health metric. This works regardless of
+*where* along the path the segment was actually lost — it's inferred from
+what's missing in the reassembled stream, not measured at the drop point
+itself.
+
+**Where that safety net has gaps**: it only works for connections the
+tool at least partially sees — if an entire flow (or one whole side of a
+conversation) is dropped from the start, there's no "before" to compare
+against, just a connection that appears never to have happened. And it
+doesn't apply to UDP at all — no sequence numbers, no reassembly, no
+generic structural way to notice a missing datagram (only possible via
+protocol-specific parsing of an application-layer sequence field, if the
+specific protocol carries one).
+
+**Net**: likely yes for TCP streams it's otherwise tracking, via
+stream-gap symptoms rather than a direct drop count — but that's an
+inference from reassembly gaps, not a counter, and it won't cover UDP or
+a flow dropped in its entirety. If precise loss accounting matters for
+your use case, that's the actual boundary to design around — a
+zero-loss capture on a hardware SPAN port isn't guaranteed by anything
+here, only high-probability sustained line-rate throughput up to the
+monitor port's own physical limit.
+
 ## Findings
 
 1. **Port mirroring is real, functional, and line-rate-capable for a
